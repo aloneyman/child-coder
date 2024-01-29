@@ -22,6 +22,7 @@ func main() {
 	r.GET("/comments/:course_id", api.GetCommentsByCourse)
 	r.PUT("/comment/update/:id", api.UpdateComment)
 	r.DELETE("/comment/delete/:id", api.DeleteComment)
+	r.POST("/default", api.Default)
 
 	// 你可以在这里添加更多的路由
 

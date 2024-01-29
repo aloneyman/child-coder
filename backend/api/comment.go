@@ -74,3 +74,7 @@ func DeleteComment(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "评论删除成功"})
 }
+
+func Default(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "hello coder"})
+}
