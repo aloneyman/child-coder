@@ -3,26 +3,27 @@ package main
 import (
 	"child-coding-platform/backend/api"
 	"child-coding-platform/backend/database"
-	"fmt"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	database.Connect() // 确保数据库连接已经建立
 
-	// 首先连接数据库
-	database.Connect()
+	r := gin.Default()
 
-	// 然后设置路由
-	http.HandleFunc("/register", api.RegisterUser)
-	http.HandleFunc("/login", api.LoginUser)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "欢迎来到少儿编程平台!")
-	})
+	// 注册路由
+	r.POST("/register", api.RegisterUser)
+	r.POST("/login", api.LoginUser)
+	r.POST("/course/create", api.AdminRequired(), api.CreateCourse)
+	r.POST("/course/update", api.AdminRequired(), api.UpdateCourse)
+	r.GET("/courses", api.GetCourses)
+	r.GET("/course/:id", api.GetCourse)
+	r.POST("/comment/create", api.CreateComment)
+	r.GET("/comments/:course_id", api.GetCommentsByCourse)
+	r.PUT("/comment/update/:id", api.UpdateComment)
+	r.DELETE("/comment/delete/:id", api.DeleteComment)
 
-	// 打印启动服务器的消息
-	fmt.Println("服务器启动在 http://localhost:8081")
+	// 你可以在这里添加更多的路由
 
-	// 最后，启动服务器（这将会阻塞，直到服务器停止）
-	http.ListenAndServe(":8081", nil)
-
+	r.Run() // 默认监听并在 0.0.0.0:8080 上启动服务
 }

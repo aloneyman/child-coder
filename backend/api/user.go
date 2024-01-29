@@ -3,57 +3,55 @@ package api
 import (
 	"child-coding-platform/backend/database"
 	"child-coding-platform/backend/model"
-	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
 
-func RegisterUser(w http.ResponseWriter, r *http.Request) {
+// RegisterUser 处理用户注册请求
+func RegisterUser(c *gin.Context) {
 	var user model.User
-	json.NewDecoder(r.Body).Decode(&user)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	// 对密码进行哈希处理
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码加密失败"})
 		return
 	}
 	user.Password = string(hashedPassword)
 
-	// 创建用户
 	result := database.DB.Create(&user)
 	if result.Error != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": result.Error.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": result.Error.Error()})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "注册成功"})
+	c.JSON(http.StatusOK, gin.H{"message": "注册成功"})
 }
 
-func LoginUser(w http.ResponseWriter, r *http.Request) {
+// LoginUser 处理用户登录请求
+func LoginUser(c *gin.Context) {
 	var inputUser model.User
-	var foundUser model.User
-	json.NewDecoder(r.Body).Decode(&inputUser)
+	if err := c.ShouldBindJSON(&inputUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	// 根据用户名查找用户
+	var foundUser model.User
 	result := database.DB.Where("username = ?", inputUser.Username).First(&foundUser)
 	if result.Error != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "用户名或密码错误"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户名或密码错误"})
 		return
 	}
 
-	// 检查密码
 	err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(inputUser.Password))
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "用户名或密码错误"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户名或密码错误"})
 		return
 	}
 
-	// 返回响应
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "登录成功"})
+	c.JSON(http.StatusOK, gin.H{"message": "登录成功"})
 }

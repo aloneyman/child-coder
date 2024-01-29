@@ -8,4 +8,5 @@ type User struct {
 	Username  string    `json:"username" gorm:"unique"`
 	Password  string    `json:"password"`
 	CreatedAt time.Time `json:"created_at"`
+	Role      string    `json:"role"` // 新增字段，可以是 "admin", "teacher", "student"
 }
